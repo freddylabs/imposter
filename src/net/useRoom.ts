@@ -28,42 +28,69 @@ export function useRoom(code: string, hello: Hello | null) {
 
   useEffect(() => {
     if (!hello) return;
-    const socket = new WebSocket(socketUrl());
-    socketRef.current = socket;
-    setStatus("connecting");
-    socket.onopen = () => {
-      setStatus("open");
+    let stopped = false;
+    let attempt = 0;
+    let retry: number | undefined;
+
+    function greet(socket: WebSocket) {
+      if (!hello) return;
       if (hello.kind === "leader") {
         socket.send(JSON.stringify({ type: "resume", kind: "leader", code, token: hello.token }));
-      } else if (hello.kind === "audience") {
+        return;
+      }
+      if (hello.kind === "audience") {
         socket.send(JSON.stringify({ type: "watch", code }));
-      } else if (hello.token) {
-        socket.send(JSON.stringify({ type: "resume", kind: "player", code, token: hello.token }));
+        return;
+      }
+      const token = sessionStorage.getItem(playerKey(code)) ?? hello.token;
+      if (token) {
+        socket.send(JSON.stringify({ type: "resume", kind: "player", code, token }));
       } else if (hello.name) {
         socket.send(JSON.stringify({ type: "join", code, name: hello.name }));
       }
-    };
-    socket.onmessage = (event) => {
-      const message = JSON.parse(String(event.data)) as {
-        type?: string;
-        view?: ClientView;
-        message?: string;
-        token?: string;
+    }
+
+    function connect() {
+      const socket = new WebSocket(socketUrl());
+      socketRef.current = socket;
+      setStatus("connecting");
+      socket.onopen = () => {
+        attempt = 0;
+        setStatus("open");
+        greet(socket);
       };
-      if (message.type === "state" && message.view) {
-        setView(message.view);
-        setError(null);
-      } else if (message.type === "joined" && message.token) {
-        sessionStorage.setItem(playerKey(code), message.token);
-      } else if (message.type === "error" && message.message) {
-        setError(message.message);
-      }
-    };
-    socket.onclose = () => {
-      if (socketRef.current === socket) setStatus("closed");
-    };
+      socket.onmessage = (event) => {
+        const message = JSON.parse(String(event.data)) as {
+          type?: string;
+          view?: ClientView;
+          message?: string;
+          token?: string;
+        };
+        if (message.type === "state" && message.view) {
+          setView(message.view);
+          setError(null);
+        } else if (message.type === "joined" && message.token) {
+          sessionStorage.setItem(playerKey(code), message.token);
+        } else if (message.type === "error" && message.message) {
+          setError(message.message);
+        }
+      };
+      socket.onclose = () => {
+        if (stopped || socketRef.current !== socket) return;
+        attempt += 1;
+        if (attempt > 5) {
+          setStatus("closed");
+          return;
+        }
+        retry = window.setTimeout(connect, 800);
+      };
+    }
+
+    connect();
     return () => {
-      socket.close();
+      stopped = true;
+      if (retry !== undefined) window.clearTimeout(retry);
+      socketRef.current?.close();
     };
   }, [code, helloKey]);
 

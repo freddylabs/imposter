@@ -207,31 +207,41 @@ function handle(socket: Client, message: Record<string, unknown>) {
   }
 }
 
-const server = createServer((_req, res) => {
-  res.writeHead(200, { "content-type": "text/plain" });
-  res.end("ok");
-});
+let server: ReturnType<typeof createServer> | undefined;
 
-const wss = new WebSocketServer({ server, path: "/ws" });
-
-wss.on("connection", (socket) => {
-  const client = socket as Client;
-  sockets.add(client);
-  client.on("close", () => {
-    sockets.delete(client);
-    const current = client.roomCode ? rooms.get(client.roomCode) : undefined;
-    if (current && client.playerId) broadcast(presence(current));
+export function createRoomServer() {
+  if (server) return server;
+  server = createServer((_req, res) => {
+    res.writeHead(200, { "content-type": "text/plain" });
+    res.end("ok");
   });
-  client.on("message", (raw) => {
-    try {
-      const message = JSON.parse(String(raw)) as Record<string, unknown>;
-      handle(client, message);
-    } catch {
-      fail(client, "That message could not be read.");
-    }
-  });
-});
 
-server.listen(PORT, "127.0.0.1", () => {
-  console.log(`room server on ${PORT}`);
-});
+  const wss = new WebSocketServer({ server });
+
+  wss.on("connection", (socket) => {
+    const client = socket as Client;
+    sockets.add(client);
+    client.on("close", () => {
+      sockets.delete(client);
+      const current = client.roomCode ? rooms.get(client.roomCode) : undefined;
+      if (current && client.playerId) broadcast(presence(current));
+    });
+    client.on("message", (raw) => {
+      try {
+        const message = JSON.parse(String(raw)) as Record<string, unknown>;
+        handle(client, message);
+      } catch {
+        fail(client, "That message could not be read.");
+      }
+    });
+  });
+
+  return server;
+}
+
+const entry = process.argv[1] ?? "";
+if (!process.env.VERCEL && (entry.endsWith("server/index.ts") || entry.endsWith("server/index.js"))) {
+  createRoomServer().listen(PORT, "127.0.0.1", () => {
+    console.log(`room server on ${PORT}`);
+  });
+}
