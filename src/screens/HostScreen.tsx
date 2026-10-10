@@ -5,6 +5,7 @@ import {
   ClueBoard,
   ClueForm,
   Roster,
+  RoomCode,
   ScoreLine,
   SecretHold,
   ShareLinks,
@@ -35,7 +36,7 @@ export function HostScreen({ code }: { code: string }) {
   }, [dirty, view, word]);
 
   useEffect(() => {
-    document.title = `Host ${code} · Imposter`;
+    document.title = `Room code ${code} · Imposter`;
   }, [code]);
 
   if (!token) {
@@ -51,7 +52,7 @@ export function HostScreen({ code }: { code: string }) {
   if (!view) {
     return (
       <Screen>
-        <p className="kicker">{code}</p>
+        <RoomCode code={code} compact />
         <h1>{status === "closed" ? "The room is offline" : "Opening the room"}</h1>
         <Notice>{error}</Notice>
       </Screen>
@@ -63,7 +64,11 @@ export function HostScreen({ code }: { code: string }) {
   return (
     <Screen>
       <p className="kicker">{roundTitle(view.round, view.maxRounds, view.phase)}</p>
-      <h1 className="code-chip">{view.code}</h1>
+      <RoomCode
+        code={view.code}
+        compact={view.phase !== "lobby"}
+        detail={view.phase === "lobby" ? "This is the code. Players type it to join the game." : undefined}
+      />
       <p className="lede">
         {view.mode === "inclusive"
           ? "You are in the game. You will not be told whether you are the imposter."

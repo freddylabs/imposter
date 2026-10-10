@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ClueBoard, ClueForm, Celebration, Roster, ScoreLine, SecretHold, roundTitle } from "../components/play";
+import { ClueBoard, ClueForm, Celebration, Roster, RoomCode, ScoreLine, SecretHold, roundTitle } from "../components/play";
 import { Button, Notice, Screen } from "../components/ui";
 import { playerKey, useRoom } from "../net/useRoom";
 
@@ -38,7 +38,7 @@ export function PlayerScreen({ code }: { code?: string }) {
   if (!view && token && !dropped && status !== "closed") {
     return (
       <Screen>
-        <p className="kicker">{sessionCode}</p>
+        <RoomCode code={sessionCode} compact detail="Rejoining this game." />
         <h1>Rejoining the table</h1>
         <Notice>{error}</Notice>
       </Screen>
@@ -51,7 +51,8 @@ export function PlayerScreen({ code }: { code?: string }) {
     return (
       <Screen>
         <p className="kicker">Join</p>
-        <h1>{sessionCode || "Enter the code"}</h1>
+        <h1>{sessionCode ? "Enter your name" : "Enter the room code"}</h1>
+        {sessionCode ? <RoomCode code={sessionCode} detail="This is the code for the game you are joining." /> : null}
         <p className="lede">Your name shows in the lobby. Your card does not.</p>
         <Notice>{error}</Notice>
         {status === "connecting" && hello ? <p className="note">Joining the table…</p> : null}
@@ -102,7 +103,7 @@ export function PlayerScreen({ code }: { code?: string }) {
     <Screen>
       <p className="kicker">{roundTitle(view.round, view.maxRounds, view.phase)}</p>
       <h1>{mine?.name ?? "You"}</h1>
-      <p className="note">Room {view.code}</p>
+      <RoomCode code={view.code} compact detail="You are in this game." />
       <Notice>{error}</Notice>
       {view.phase === "lobby" ? (
         <div className="stack">

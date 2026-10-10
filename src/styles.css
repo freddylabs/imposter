@@ -691,12 +691,44 @@ legend { font-weight: 650; margin-bottom: 10px; }
   .top-meta { display: none; }
 }
 
+.room-code {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  width: min(100%, 440px);
+  margin: 2px 0 8px;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.room-code.compact {
+  width: fit-content;
+  padding: 10px 14px;
+}
+.code-label {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
 .code-chip {
   font-family: var(--serif);
   font-size: clamp(2.6rem, 8vw, 4.6rem);
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   line-height: 1;
   margin: 0;
+}
+.room-code.compact .code-chip {
+  font-size: 1.7rem;
+  letter-spacing: 0.16em;
+}
+.stage .room-code {
+  justify-items: center;
+  text-align: center;
+  width: min(100%, 560px);
+  margin-inline: auto;
 }
 .share-grid, .roster, .choice-list { display: grid; gap: 10px; }
 fieldset.choice-list { border: 0; margin: 0; padding: 0; min-inline-size: 0; }

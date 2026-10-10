@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Celebration, ClueBoard, Roster, ScoreLine, roundTitle } from "../components/play";
+import { Celebration, ClueBoard, Roster, RoomCode, ScoreLine, roundTitle } from "../components/play";
 import { Notice, Screen } from "../components/ui";
 import { useRoom } from "../net/useRoom";
 
@@ -7,14 +7,14 @@ export function WatchScreen({ code }: { code: string }) {
   const { view, error, status } = useRoom(code, { kind: "audience" });
 
   useEffect(() => {
-    document.title = `Audience ${code} · Imposter`;
+    document.title = `Room code ${code} · Audience`;
   }, [code]);
 
   if (!view) {
     return (
       <Screen className="stage">
         <p className="kicker">Audience</p>
-        <h1 className="code-chip">{code}</h1>
+        <RoomCode code={code} detail="This is the code. Players type it to join the game." />
         <p className="lede">{status === "closed" ? "This display is offline." : "Connecting the display…"}</p>
         <Notice>{error}</Notice>
       </Screen>
@@ -24,7 +24,11 @@ export function WatchScreen({ code }: { code: string }) {
   return (
     <Screen className="stage">
       <p className="kicker">{roundTitle(view.round, view.maxRounds, view.phase)} · Audience</p>
-      <h1 className="code-chip">{view.code}</h1>
+      <RoomCode
+        code={view.code}
+        compact={view.phase !== "lobby"}
+        detail={view.phase === "lobby" ? "This is the code. Players type it on their phones to join." : undefined}
+      />
       <Notice>{error}</Notice>
       {view.phase === "lobby" ? (
         <div className="stack">

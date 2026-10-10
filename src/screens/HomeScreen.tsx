@@ -48,14 +48,14 @@ export function HomeScreen() {
         }}
       >
         <label className="field">
-          <span>Have a code?</span>
+          <span>Room code</span>
           <input
             className="input"
             value={code}
             maxLength={4}
             autoCapitalize="characters"
             autoComplete="off"
-            placeholder="ABCD"
+            placeholder="Type the room code"
             aria-label="Room code"
             onChange={(event) => setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4))}
           />

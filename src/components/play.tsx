@@ -163,6 +163,19 @@ export function ScoreLine({ history }: { history: PastRound[] }) {
   );
 }
 
+export function RoomCode({ code, detail, compact = false }: { code: string; detail?: string; compact?: boolean }) {
+  const spoken = code.split("").join(" ");
+  return (
+    <div className={compact ? "room-code compact" : "room-code"}>
+      <p className="code-label">Room code</p>
+      <p className="code-chip" aria-label={`Room code ${spoken}`}>
+        {code}
+      </p>
+      {detail ? <p className="note">{detail}</p> : null}
+    </div>
+  );
+}
+
 export function ShareLinks({ code }: { code: string }) {
   const origin = window.location.origin;
   return (
